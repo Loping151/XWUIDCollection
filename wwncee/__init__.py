@@ -13,7 +13,7 @@ from gsuid_core.logger import logger
 from gsuid_core.utils.image.convert import convert_img
 
 
-sv_ww_gaokao = SV("高考", priority=5)
+sv_gaokao = SV("高考", priority=5)
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 _jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
@@ -104,8 +104,8 @@ async def _fetch_matrix(token: str, waves_id: str, version: str) -> Tuple[int, i
     return 0, 0
 
 
-@sv_ww_gaokao.on_command(
-    ("高考", "高考查分", "查分"),
+@sv_gaokao.on_command(
+    ("高考", "高考查分", "查分", "gk"),
     block=True,
     to_ai="""鸣潮恶搞·模拟高考出分：把冥歌海墟+终焉矩阵的远端排行分数包装成全国高考成绩单。
 

@@ -18,7 +18,7 @@ from .char_data import (
 )
 from .config import get_bingo_ids
 
-sv_ww_bingo = SV("宾果", priority=5)
+sv_bingo = SV("宾果", priority=5)
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 _jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
@@ -67,7 +67,7 @@ def _badge_for(lines: int) -> str:
     return "鸣潮活祖宗"
 
 
-@sv_ww_bingo.on_command(
+@sv_bingo.on_command(
     ("宾果", "冰果", "冰菓", "五星宾果", "角色宾果", "bingo", "bg"),
     block=True,
     to_ai="""鸣潮五星角色宾果收集图：把本地已有的角色数据摆进 6x6 棋盘,已拥有的高亮,连成一条线就算收藏家。
