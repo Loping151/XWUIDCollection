@@ -79,7 +79,7 @@ Args:
 """,
 )
 async def cmd_ww_bingo(bot: Bot, ev: Event):
-    from plugins.XutheringWavesUID.XutheringWavesUID.utils.at_help import ruser_id
+    from plugins.XutheringWavesUID.XutheringWavesUID.utils.at_help import ruser_id, is_valid_at
     from plugins.XutheringWavesUID.XutheringWavesUID.utils.database.models import WavesBind
     from plugins.XutheringWavesUID.XutheringWavesUID.utils.char_info_utils import (
         get_all_roleid_detail_info_int,
@@ -165,7 +165,10 @@ async def cmd_ww_bingo(bot: Bot, ev: Event):
 
     avatar = await get_event_avatar(ev)
     avatar_url = pil_to_b64(avatar, quality=80)
-    nickname = (ev.sender or {}).get("nickname") or f"玩家{str(uid)[-8:]}"
+    if is_valid_at(ev):
+        nickname = f"玩家{str(uid)[-8:]}"
+    else:
+        nickname = (ev.sender or {}).get("nickname") or f"玩家{str(uid)[-8:]}"
 
     badge = _badge_for(lines)
     certified = lines >= 1
