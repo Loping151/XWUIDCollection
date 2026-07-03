@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="{{ font_css_url }}">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { margin: 0; }
+
+  :root {
+    --yellow: #ffea00;
+    --yellow2: #f7ff1d;
+    --black: #14191e;
+    --deep: #262b30;
+    --white: #fff;
+    --soft: rgba(255,255,255,.68);
+  }
+
+  .container {
+    width: 960px;
+    position: relative;
+    overflow: hidden;
+    padding: 34px 24px 34px;
+    font-family: 'HYWenHei-85W', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    color: var(--white);
+    background:
+      radial-gradient(circle at 16% 4%, rgba(255,234,0,.12), transparent 30%),
+      radial-gradient(circle at 86% 18%, rgba(255,255,255,.065), transparent 34%),
+      radial-gradient(circle at 74% 82%, rgba(255,234,0,.075), transparent 28%),
+      radial-gradient(circle at 8% 78%, rgba(255,255,255,.045), transparent 24%),
+      linear-gradient(150deg, #3b4147 0%, #242a30 46%, #11161b 100%);
+  }
+
+  .container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: .22;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.026) 0 1px, transparent 1px 52px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 52px),
+      repeating-linear-gradient(135deg, rgba(255,234,0,.030) 0 1px, transparent 1px 38px);
+  }
+
+  .container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: .38;
+    background:
+      linear-gradient(118deg, transparent 0 18%, rgba(255,255,255,.035) 18% 19%, transparent 19% 45%, rgba(255,234,0,.030) 45% 46%, transparent 46% 100%);
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  .header {
+    min-height: 134px;
+    position: relative;
+    text-align: center;
+    padding: 0 170px;
+  }
+
+  .avatar {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--yellow);
+    box-shadow: 0 0 0 8px rgba(255,234,0,.16);
+    background: #20252a;
+  }
+
+  .title {
+    font-size: 44px;
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 0 3px 10px rgba(0,0,0,.42);
+  }
+
+  .subtitle {
+    margin-top: 13px;
+    color: rgba(255,255,255,.82);
+    font-size: 26px;
+    font-weight: 700;
+  }
+
+  .meta {
+    margin-top: 16px;
+    color: var(--soft);
+    font-size: 21px;
+    font-weight: 700;
+  }
+
+  .title-bar {
+    margin: 16px 0 16px;
+    height: 84px;
+    border-radius: 10px;
+    color: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    background:
+      radial-gradient(circle at 18% -30%, rgba(255,255,255,.42), transparent 42%),
+      radial-gradient(circle at 72% -50%, rgba(255,255,255,.34), transparent 42%),
+      linear-gradient(120deg, var(--yellow2), var(--yellow));
+    box-shadow: 0 12px 28px rgba(0,0,0,.28);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(0,0,0,.34);
+    box-shadow: 0 16px 38px rgba(0,0,0,.30);
+  }
+
+  .cell {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: #171d23;
+    overflow: hidden;
+  }
+
+  .cell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 58%, rgba(0,0,0,.34) 100%);
+  }
+
+  .cell::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    z-index: 1;
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,.045);
+  }
+
+  .head {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 0;
+  }
+
+  .cell:not(.owned) .head {
+    filter: brightness(.42) saturate(.72);
+  }
+
+  .owned {
+    outline: 2px solid rgba(255,234,0,.92);
+    outline-offset: -3px;
+  }
+
+  .check {
+    position: absolute;
+    z-index: 3;
+    right: 9px;
+    top: 9px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--yellow);
+    border: 2px solid var(--black);
+    box-shadow: 0 2px 8px rgba(0,0,0,.42);
+  }
+
+  .check::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    width: 8px;
+    height: 14px;
+    border: solid var(--black);
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+  }
+
+  .chain {
+    position: absolute;
+    z-index: 3;
+    left: 8px;
+    top: 8px;
+    min-width: 42px;
+    padding: 3px 7px 4px;
+    border-radius: 7px;
+    color: var(--yellow);
+    background: rgba(20,25,30,.58);
+    border: 1px solid rgba(255,234,0,.46);
+    font-size: 17px;
+    font-weight: 900;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.28);
+  }
+
+  .stamp {
+    position: absolute;
+    z-index: 9;
+    right: 22px;
+    top: 42px;
+    width: 212px;
+    height: 168px;
+    transform: rotate(-16deg);
+    opacity: .92;
+    border: 5px solid {% if certified %}var(--yellow){% else %}#8c9196{% endif %};
+    border-radius: 24px;
+    color: {% if certified %}var(--yellow){% else %}#8c9196{% endif %};
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: 900;
+    background: rgba(255,234,0,.06);
+  }
+
+  .stamp .small { font-size: 19px; }
+  .stamp .main {
+    font-size: 28px;
+    color: {% if certified %}#14191e{% else %}#8c9196{% endif %};
+    text-shadow: {% if certified %}0 0 2px var(--yellow){% else %}none{% endif %};
+  }
+
+  .footer {
+    margin-top: 24px;
+    text-align: center;
+    color: rgba(255,255,255,.68);
+    font-size: 24px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="content">
+    <div class="header">
+      <img class="avatar" src="{{ avatar_url }}" alt="avatar">
+      <div class="title">{{ title }}</div>
+      <div class="subtitle">只要连成一条线说明你是{{ badge if certified else '鸣潮角色收藏家' }}</div>
+      <div class="meta">填表人：{{ nickname }}　已点亮 {{ owned_count }}/{{ total }}</div>
+    </div>
+
+    <div class="title-bar">只要连成一条线说明你是鸣潮老资历</div>
+
+    <div class="grid">
+      {% for cell in cells %}
+      <div class="cell {% if cell.owned %}owned{% endif %}">
+        <img class="head" src="{{ cell.head }}" alt="role">
+        {% if cell.owned %}
+        <span class="check"></span>
+        {% if cell.chain is not none %}
+        <span class="chain">{{ cell.chain }}链</span>
+        {% endif %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="footer">已点亮 {{ owned_count }}/{{ total }} · 连线 {{ lines }} 条 · {{ badge if certified else '鸣潮角色收藏家' }}</div>
+  </div>
+
+  <div class="stamp">
+    <div class="small">连线 {{ lines }} 条</div>
+    <div class="main">{{ '认证成功' if certified else '认证失败' }}</div>
+    <div class="small">{{ current_date }}</div>
+  </div>
+</div>
+</body>
+</html>

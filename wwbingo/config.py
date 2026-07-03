@@ -6,10 +6,12 @@ from gsuid_core.utils.plugins_config.models import (
     GSC,
     GsBoolConfig,
     GsListStrConfig,
+    GsStrConfig,
 )
 from gsuid_core.utils.plugins_config.gs_config import StringConfig
 
 from .char_data import FIVE_STAR_IDS, FOUR_STAR_IDS, ROVER_IDS, has_head
+from .ui_style import BingoUIStyle, normalize_bingo_ui_style
 
 CONFIG_PATH = get_res_path("XWUIDCollection") / "config.json"
 
@@ -32,6 +34,12 @@ CONFIG_DEFAULT: Dict[str, GSC] = {
         "随机时带四星",
         "随机生成棋盘时是否把四星也算进去(默认关,只随五星)",
         False,
+    ),
+    "BingoUIStyle": GsStrConfig(
+        "宾果UI样式",
+        "classic=原版HTML样式; wcl=连线收集图深色黄边样式",
+        "classic",
+        options=["classic", "wcl"],
     ),
 }
 
@@ -70,3 +78,7 @@ def get_bingo_ids() -> List[int]:
             if len(ids) >= 36:
                 break
     return ids[:36]
+
+
+def get_bingo_ui_style() -> BingoUIStyle:
+    return normalize_bingo_ui_style(XWUIDCollectionConfig.get_config("BingoUIStyle").data)

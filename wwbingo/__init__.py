@@ -16,7 +16,7 @@ from .char_data import (
     FEMALE_ROVER_IDS,
     get_char_attribute,
 )
-from .config import get_bingo_ids
+from .config import get_bingo_ids, get_bingo_ui_style
 
 sv_bingo = SV("宾果", priority=5)
 
@@ -197,7 +197,8 @@ async def cmd_ww_bingo(bot: Bot, ev: Event):
         "footer_b64": get_footer_b64(footer_type="white") or "",
     }
 
-    img_bytes = await render_html(_jinja_env, "bingo.html", context)
+    template_name = "bingo_wcl.html" if get_bingo_ui_style() == "wcl" else "bingo.html"
+    img_bytes = await render_html(_jinja_env, template_name, context)
     if not img_bytes:
         return await bot.send("渲染失败！", at_sender=True)
 
