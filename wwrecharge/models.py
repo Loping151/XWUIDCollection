@@ -112,6 +112,11 @@ class Order(ApiModel):
             raise RechargeError("官方订单返回的支付地址异常，请到官方充值中心确认订单。")
 
 
+class OrderStatus(ApiModel):
+    status: int
+    number: str = Field(alias="orderNum", min_length=1)
+
+
 @dataclass(frozen=True)
 class CartItem:
     goods: Goods

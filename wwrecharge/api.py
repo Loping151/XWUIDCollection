@@ -14,6 +14,7 @@ from .models import (
     Envelope,
     PayChannel,
     PayMethods,
+    OrderStatus,
     RechargeError,
     sorted_goods,
 )
@@ -25,9 +26,9 @@ _GOODS = TypeAdapter(list[Goods])
 
 
 class Cashier:
-    def __init__(self, client: httpx.AsyncClient) -> None:
+    def __init__(self, client: httpx.AsyncClient, token: str = "") -> None:
         self.client = client
-        self._token = ""
+        self._token = token
         self._base: dict[str, str] = {
             "gameId": "G152",
             "pkgId": "A1409",
@@ -61,6 +62,10 @@ class Cashier:
         if body.code != 200:
             raise RechargeError("库街区登录已失效或授权失败，请重新登录后再试。")
         self._token = Permit.model_validate(body.data).access_token
+
+    @property
+    def token(self) -> str:
+        return self._token
 
     async def _call(self, path: str, role: Role | None = None, **extra: str) -> JsonValue:
         body = dict(self._base)
@@ -113,3 +118,9 @@ class Cashier:
             raise RechargeError("下单结果未知，请到官方充值中心确认，勿立即重复下单。") from exc
         order.validate_channel(channel)
         return order
+
+    async def order_status(self, role: Role, number: str) -> int:
+        result = OrderStatus.model_validate(await self._call("v1/order/query", role, orderNum=number))
+        if result.number != number:
+            raise RechargeError("官方订单查询结果与订单号不一致。")
+        return result.status

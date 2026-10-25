@@ -1,3 +1,5 @@
+import time
+import asyncio
 from dataclasses import field, dataclass
 
 import httpx
@@ -11,12 +13,13 @@ from gsuid_core.models import Event
 from .api import Cashier
 from .state import RechargeState
 from .config import enabled, cooldown, default_channel
-from .models import OFFICIAL_ADVICE, RechargeError, cart_total
+from .models import OFFICIAL_ADVICE, Role, Order, RechargeError, cart_total
 from .parser import payment, parse_cart, validate_cart
 from .render import render_order, render_catalogue
 
 sv_recharge = SV("充值", priority=5)
 _state = RechargeState()
+_watchers: set[asyncio.Task[None]] = set()
 
 
 @dataclass(frozen=True)
@@ -43,6 +46,28 @@ async def _credential(ev: Event) -> Credential:
     return Credential(uid, user.cookie, user.did)
 
 
+async def _watch(bot: Bot, ev: Event, token: str, role: Role, order: Order, summary: str) -> None:
+    deadline = time.monotonic() + 600
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10, connect=5), follow_redirects=False) as client:
+        cashier = Cashier(client, token)
+        while time.monotonic() < deadline:
+            await asyncio.sleep(3)
+            try:
+                status = await cashier.order_status(role, order.number)
+            except (httpx.HTTPError, ValidationError):
+                continue
+            except RechargeError as exc:
+                logger.warning(f"[ww充值] 订单状态查询中止：{exc}")
+                return
+            if status == 0:
+                logger.info(f"[ww充值] 订单 {order.number} 支付成功")
+                await bot.send(f"充值成功\n{summary}\n到账以游戏内为准", at_sender=bool(ev.group_id))
+                return
+            if status == 2:
+                await bot.send(f"订单支付失败或已关闭\n{summary}", at_sender=bool(ev.group_id))
+                return
+
+
 async def _recharge(bot: Bot, ev: Event, credential: Credential) -> None:
     text, channel = payment(ev.text, default_channel())
     async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), follow_redirects=False) as client:
@@ -65,13 +90,16 @@ async def _recharge(bot: Bot, ev: Event, credential: Credential) -> None:
             _state.reserve_order(credential.uid, cooldown())
             order = await cashier.create_order(role, cart, channel)
     image = await render_order(role, cart, channel, order)
-    if order is not None:
-        items = "、".join(f"{item.goods.name} ×{item.quantity}" for item in cart)
-        await bot.send(
-            f"{role.name} · UID {role.uid}\n{items}\n"
-            f"合计 ¥{cart_total(cart):.2f}（{'微信' if channel == '23' else '支付宝'}）\n{OFFICIAL_ADVICE}"
-        )
+    if order is None:
+        await bot.send(image)
+        return
+    items = "、".join(f"{item.goods.name} ×{item.quantity}" for item in cart)
+    summary = f"{role.name} · UID {role.uid}\n{items}\n合计 ¥{cart_total(cart):.2f}"
+    await bot.send(f"{summary}（{'微信' if channel == '23' else '支付宝'}）\n{OFFICIAL_ADVICE}")
     await bot.send(image)
+    task = asyncio.create_task(_watch(bot, ev, cashier.token, role, order, summary))
+    _watchers.add(task)
+    task.add_done_callback(_watchers.discard)
 
 
 @sv_recharge.on_command(("充值", "充钱", "储值", "重置"), block=True)
