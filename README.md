@@ -12,10 +12,13 @@ xwuid小合集，依赖 [XutheringWavesUID](../XutheringWavesUID) 的数据与�
 | --- | --- |
 | `ww高考` | 鸣潮成绩单（需有已上传记录总排行） |
 | `ww宾果` | 6×6 角色宾果图 |
+| `ww充值` / `ww充钱` | 充值商品列表；`ww充值1+2` 等生成订单确认图 |
 
 ## 配置
 
-`data/XWUIDCollection/config.json`（统一在此）：
+`data/XWUIDCollection/config.json`：
 
 - `BingoRoleIds`：6×6 = 36 个角色ID（行优先）。**留空 → 每次随机生成合法组合**；填了就用填的（不足随机补、超出截断）。想固定成参考图顺序，把 `wwbingo/config.py` 里的 `REFERENCE_BINGO_IDS` 填进来即可。
 - `BingoWith4Star`：随机时是否带四星，默认关（只随五星）。标题也随之自动切换（`鸣潮五星角色` / `鸣潮角色`）。
+
+`data/XWUIDCollection/recharge.json` 的 `RechargeEnable` 控制是否真实下单并发送支付二维码，默认关闭（仅预览，二维码模糊），开启后自行负责。

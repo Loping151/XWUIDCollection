@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block style %}
+  .product-item .item-top { background-image: url('{{ assets.card_bg }}'); }
+  .product-tag.type-first { background-image: url('{{ assets.tag_first }}'); }
+  .product-tag.type-extra { background-image: url('{{ assets.tag_extra }}'); }
+  .product-tag .bonus-left { background-image: url('{{ assets.bonus_left }}'); }
+  .product-tag .bonus-left-arrow { background-image: url('{{ assets.bonus_left_inner }}'); }
+  .product-tag .bonus-center { background-image: url('{{ assets.bonus_center }}'); }
+  .product-tag .bonus-right { background-image: url('{{ assets.bonus_right }}'); }
+  .product-item.unavailable { opacity: .5; }
+{% endblock %}
+{% block banner %}
+  <div class="user-info-box">
+    <div class="left-container">
+      <img class="mc-logo" src="{{ assets.mc_logo }}" alt="">
+      <div class="info-box">
+        <div class="phone-num">{{ player.name }}</div>
+        <div class="bottom-box"><span>{{ player.server }}</span><div class="line"></div><span>UID {{ player.uid }}</span></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <section class="product-content">
+    <div class="product-header">
+      <div class="tag-item">全部商品</div>
+      <div class="header-right">商品编号 5 分钟内有效</div>
+    </div>
+    <div class="product-list">
+      {% for product in products %}
+      <article class="product-item{% if not product.available %} unavailable{% endif %}">
+        {% if product.badge %}
+          {% if product.badge_type == 'bonus' %}
+          <div class="product-tag type-bonus"><span class="bonus-left"><span class="bonus-left-arrow"></span></span><span class="bonus-center">{{ product.badge }}</span><span class="bonus-right"></span></div>
+          {% else %}
+          <div class="product-tag type-{{ product.badge_type }}"><img src="{{ assets.tag_star }}" alt=""><span>{{ product.badge }}</span></div>
+          {% endif %}
+        {% endif %}
+        <div class="item-top">
+          <div class="product-img">{% if product.image %}<img src="{{ product.image }}" alt="">{% endif %}</div>
+          {% if product.remaining is not none and product.remaining >= 0 %}
+          <div class="limit-info">限购 {{ product.remaining }}{% if product.buy_limit %}/{{ product.buy_limit }}{% endif %}</div>
+          {% endif %}
+        </div>
+        <div class="item-bottom">
+          <div class="item-title"><span>{{ product.name }}</span></div>
+          <div class="product-info-box">
+            <div class="price-info"><span class="currency">¥</span><span>{{ product.price }}</span></div>
+            <div class="pay-btn-box">
+              <div class="pay-btn">{% if product.available %}ww充值{{ product.index }}{% else %}暂不可购买{% endif %}</div>
+              <div class="add-shopping"><img src="{{ assets.cart }}" alt=""></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="pay-tips-box">
+      <div class="tips-title">购买方式</div>
+      <div class="tips-text"><b>ww充值1</b> 单件购买，<b>ww充值1+2+3</b> 或 <b>ww充值1、2、3</b> 合并下单</div>
+      <div class="tips-text"><b>ww充值3个月卡</b>、<b>ww充值2个6480</b> 按名称与数量匹配；指令后加「微信」或「支付宝」选择付款方式</div>
+    </div>
+  </section>
+{% endblock %}

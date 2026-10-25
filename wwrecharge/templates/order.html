@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block kind %}order{% endblock %}
+{% block style %}
+  .container.order { width: 9.6rem; }
+  .payment-modal { position: relative; z-index: 2; width: 8.8rem; margin: -.3rem auto .24rem; }
+  .modal-content { display: flex; align-items: stretch; border-radius: .08rem; overflow: hidden; box-shadow: 0 .04rem .2rem rgba(0,0,0,.08); }
+  .modal-left { position: relative; width: 4.8rem; background: #fff; padding: .24rem .24rem .32rem; }
+  .modal-left .payment-modal-bg { position: absolute; left: 0; bottom: 0; width: 100%; }
+  .modal-left > * { position: relative; }
+  .header-left-title { font-size: .18rem; font-weight: 700; line-height: .26rem; }
+  .modal-left .info-box { margin-top: .16rem; padding: .1rem .14rem; background: #f8f9fa; border-left: .03rem solid #d68533; border-radius: 0 .04rem .04rem 0; }
+  .modal-left .info-box .phone-num { font-size: .17rem; font-weight: 700; line-height: .26rem; overflow-wrap: anywhere; }
+  .modal-left .bottom-box { font-size: .14rem; line-height: .22rem; }
+  .modal-left .bottom-box .line { height: .12rem; margin: 0 .1rem; }
+  .product-total { margin-top: .24rem; font-size: .14rem; color: #7e7e7e; line-height: .22rem; }
+  .shopping-detail-item { display: flex; align-items: center; margin-top: .16rem; }
+  .shopping-detail-item-img-wrapper { width: .56rem; height: .56rem; flex-shrink: 0; margin-right: .14rem; border-radius: .04rem; background: url('{{ assets.shopping_bg }}') center / 100% 100% no-repeat; }
+  .shopping-detail-item-img-wrapper img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .item-right { flex: 1; min-width: 0; }
+  .shopping-detail-item-name { display: flex; justify-content: space-between; gap: .12rem; font-size: .17rem; line-height: .26rem; }
+  .shopping-detail-item-name span:first-child { overflow-wrap: anywhere; }
+  .shopping-item-total { color: #7e7e7e; font-size: .15rem; white-space: nowrap; }
+  .shopping-detail-item-price { margin-top: .02rem; font-size: .17rem; font-weight: 700; color: #d68533; line-height: .24rem; }
+  .shopping-detail-item-price small { margin-left: .08rem; font-size: .13rem; font-weight: 400; color: #7e7e7e; }
+  .modal-right { width: 4rem; background: #f5f6f7; padding: .3rem .32rem .24rem; display: flex; flex-direction: column; }
+  .payment-page { display: flex; flex-direction: column; align-items: center; margin-bottom: .2rem; }
+  .qrcode-content { position: relative; overflow: hidden; width: 2.8rem; height: 2.8rem; border: .0175rem solid rgba(0,0,0,.1); border-radius: .07rem; padding: .1rem; background: #fff; }
+  .qr-code { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .locked .qr-code { filter: blur(.06rem); opacity: .45; transform: scale(1.06); }
+  .qrcode-mask { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,.55); }
+  .lock-icon { display: flex; align-items: center; justify-content: center; width: .64rem; height: .64rem; border-radius: 50%; background: #fff; box-shadow: 0 .04rem .16rem rgba(214,133,51,.25); }
+  .lock-icon svg { width: .3rem; height: .3rem; }
+  .mask-sub { margin-top: .16rem; font-size: .15rem; color: #7e7e7e; line-height: .22rem; }
+  .mask-title { margin-top: .02rem; font-size: .22rem; font-weight: 700; color: #333; line-height: .3rem; }
+  .method-info { display: flex; align-items: center; margin-top: .14rem; font-size: .18rem; font-weight: 700; line-height: .26rem; }
+  .method-info img { width: .26rem; height: .26rem; margin-right: .08rem; }
+  .pay-tips { margin-top: .06rem; font-size: .14rem; color: #7e7e7e; line-height: .22rem; }
+  .content-bottom { margin-top: auto; padding-top: .16rem; border-top: .01rem solid rgba(0,0,0,.1); }
+  .price-info { display: flex; align-items: baseline; justify-content: space-between; font-size: .16rem; font-weight: 500; }
+  .price-info .price { font-size: .3rem; font-weight: 700; }
+  .price-info .currency { font-size: .18rem; font-weight: 700; margin-right: .02rem; }
+  .order-number { margin-top: .08rem; font-size: .12rem; color: #999; line-height: .18rem; overflow-wrap: anywhere; }
+  .disclaimer { width: 8.8rem; margin: -.04rem auto .24rem; padding: .16rem .2rem; background: #fff6ea; border-left: .04rem solid #d68533; border-radius: .04rem; color: #a2561a; font-size: .18rem; font-weight: 700; line-height: .28rem; }
+{% endblock %}
+{% block content %}
+  <section class="payment-modal">
+    <div class="modal-content">
+      <div class="modal-left">
+        <img class="payment-modal-bg" src="{{ assets.modal_bg }}" alt="">
+        <div class="header-left-title">确认购买信息</div>
+        <div class="info-box">
+          <div class="phone-num">{{ player.name }}</div>
+          <div class="bottom-box"><span>{{ player.server }}</span><div class="line"></div><span>UID {{ player.uid }}</span></div>
+        </div>
+        <div class="product-total">共 {{ count }} 件商品</div>
+        {% for item in items %}
+        <div class="shopping-detail-item">
+          <div class="shopping-detail-item-img-wrapper">{% if item.image %}<img src="{{ item.image }}" alt="">{% endif %}</div>
+          <div class="item-right">
+            <div class="shopping-detail-item-name"><span>{{ item.name }}</span><span class="shopping-item-total">×{{ item.quantity }}</span></div>
+            <div class="shopping-detail-item-price">¥{{ item.subtotal }}{% if item.quantity > 1 %}<small>单价 ¥{{ item.price }}</small>{% endif %}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="modal-right">
+        <div class="payment-page">
+          <div class="qrcode-content{% if not order_number %} locked{% endif %}">
+            <img class="qr-code" src="{{ qr }}" alt="">
+            {% if not order_number %}
+            <div class="qrcode-mask">
+              <div class="lock-icon"><svg viewBox="0 0 24 24"><path d="M7.5 10.5V7.5a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="#d68533" stroke-width="2.2" stroke-linecap="round"/><rect x="4.5" y="10" width="15" height="11" rx="2.4" fill="#d68533"/><rect x="11" y="13.6" width="2" height="3.8" rx="1" fill="#fff"/></svg></div>
+              <div class="mask-sub">出于安全考虑</div>
+              <div class="mask-title">服务未开启</div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="method-info"><img src="{{ assets[channel_icon] }}" alt="">{{ channel }}扫码</div>
+          {% if order_number %}<div class="pay-tips">订单 5 分钟内有效，请及时付款</div>{% endif %}
+        </div>
+        <div class="content-bottom">
+          <div class="price-info"><span>总价：</span><span><span class="currency">¥</span><span class="price">{{ total }}</span></span></div>
+          {% if order_number %}<div class="order-number">订单号 {{ order_number }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+  {% if disclaimer %}<div class="disclaimer">{{ disclaimer }}</div>{% endif %}
+{% endblock %}

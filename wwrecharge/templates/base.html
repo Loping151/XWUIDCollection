@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  {% if font_css_url %}<link rel="stylesheet" href="{{ font_css_url }}">{% endif %}
+  <style>
+    * { box-sizing: border-box; }
+    html { font-size: 100px; }
+    body { margin: 0; font-size: .16rem; color: #333; background: #f6f6f7; font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif; }
+    .container { width: 12.4rem; background: #f6f6f7; padding-bottom: .04rem; }
+    {% include 'native.css' %}
+    .footer { padding: 0 .4rem .2rem; text-align: center; color: #999; font-size: .13rem; line-height: .2rem; }
+    .preview { background: #a53224; color: #fff; padding: .12rem .4rem; font-size: .24rem; font-weight: 700; }
+    {% block style %}{% endblock %}
+  </style>
+</head>
+<body>
+  <main class="container {% block kind %}{% endblock %}">
+    {% if preview %}<div class="preview">{{ preview }}</div>{% endif %}
+    <div class="pay-banner">
+      <img class="pay-banner-img" src="{{ assets.banner }}" alt="">
+      <img class="kuro-logo" src="{{ assets.kuro_logo }}" alt="KURO GAMES">
+      {% block banner %}{% endblock %}
+    </div>
+    {% block content %}{% endblock %}
+    <div class="footer">XWUIDCollection · {{ official_url }}</div>
+  </main>
+</body>
+</html>
