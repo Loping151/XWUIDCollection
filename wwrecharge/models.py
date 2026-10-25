@@ -7,7 +7,7 @@ from pydantic import Field, BaseModel, JsonValue, ConfigDict, field_validator
 
 OFFICIAL_URL = "https://pay.kurogames.com/mc/cashier"
 DISCLAIMER = "本二维码从官方获得，与本插件无关；请确保信任服务提供者，请勿扫描未知二维码！"
-OFFICIAL_ADVICE = f"建议使用官方渠道{OFFICIAL_URL}"
+OFFICIAL_ADVICE = f"建议使用官方渠道\n{OFFICIAL_URL}"
 PayChannel = Literal["23", "24"]
 
 

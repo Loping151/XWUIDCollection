@@ -42,7 +42,7 @@ async def _credential(ev: Event) -> Credential:
         raise RechargeError("官方充值中心仅支持国服角色。")
     user = await WavesUser.select_waves_user(uid, ev.user_id, ev.bot_id, game_id=WAVES_GAME_ID)
     if user is None or not user.cookie or not user.is_login or user.status == "无效":
-        raise RechargeError("请先使用自己的账号登录库街区，再使用充值功能。")
+        raise RechargeError("需先登录。")
     return Credential(uid, user.cookie, user.did)
 
 
