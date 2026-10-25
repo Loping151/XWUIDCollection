@@ -99,6 +99,7 @@ async def cmd_ww_bingo(bot: Bot, ev: Event):
         SPECIAL_CHAR_INT,
         SPECIAL_CHAR_INT_ALL,
     )
+    from plugins.XutheringWavesUID.XutheringWavesUID.utils.util import hide_uid, get_hide_uid_pref
     from plugins.XutheringWavesUID.XutheringWavesUID.wutheringwaves_config import PREFIX
 
     logger.info("[ww宾果] 开始执行[五星宾果]")
@@ -165,10 +166,11 @@ async def cmd_ww_bingo(bot: Bot, ev: Event):
 
     avatar = await get_event_avatar(ev)
     avatar_url = pil_to_b64(avatar, quality=80)
+    fallback = f"玩家{hide_uid(uid, await get_hide_uid_pref(uid, user_id, ev.bot_id))}"
     if is_valid_at(ev):
-        nickname = f"玩家{str(uid)[-8:]}"
+        nickname = fallback
     else:
-        nickname = (ev.sender or {}).get("nickname") or f"玩家{str(uid)[-8:]}"
+        nickname = (ev.sender or {}).get("nickname") or fallback
 
     badge = _badge_for(lines)
     certified = lines >= 1

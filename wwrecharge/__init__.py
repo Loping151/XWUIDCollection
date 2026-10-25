@@ -11,7 +11,7 @@ from gsuid_core.logger import logger
 from gsuid_core.models import Event
 
 from .api import Cashier
-from .state import RechargeState
+from .state import Listing, RechargeState
 from .config import enabled, cooldown, default_channel
 from .models import OFFICIAL_ADVICE, Role, Order, RechargeError, cart_total
 from .parser import payment, parse_cart, validate_cart
@@ -25,11 +25,13 @@ _watchers: set[asyncio.Task[None]] = set()
 @dataclass(frozen=True)
 class Credential:
     uid: str
+    shown_uid: str
     cookie: str = field(repr=False)
     did: str = field(repr=False)
 
 
 async def _credential(ev: Event) -> Credential:
+    from plugins.XutheringWavesUID.XutheringWavesUID.utils.util import hide_uid
     from plugins.XutheringWavesUID.XutheringWavesUID.utils.constants import WAVES_GAME_ID
     from plugins.XutheringWavesUID.XutheringWavesUID.utils.database.models import WavesBind, WavesUser
 
@@ -43,7 +45,7 @@ async def _credential(ev: Event) -> Credential:
     user = await WavesUser.select_waves_user(uid, ev.user_id, ev.bot_id, game_id=WAVES_GAME_ID)
     if user is None or not user.cookie or not user.is_login or user.status == "无效":
         raise RechargeError("需先登录。")
-    return Credential(uid, user.cookie, user.did)
+    return Credential(uid, hide_uid(uid, user.hide_uid_self_value), user.cookie, user.did)
 
 
 async def _watch(bot: Bot, ev: Event, token: str, role: Role, order: Order, summary: str) -> None:
@@ -60,6 +62,7 @@ async def _watch(bot: Bot, ev: Event, token: str, role: Role, order: Order, summ
                 logger.warning(f"[ww充值] 订单状态查询中止：{exc}")
                 return
             if status == 0:
+                _state.forget(role.uid)
                 logger.info(f"[ww充值] 订单 {order.number} 支付成功")
                 await bot.send(f"充值成功\n{summary}\n到账以游戏内为准", at_sender=bool(ev.group_id))
                 return
@@ -68,27 +71,40 @@ async def _watch(bot: Bot, ev: Event, token: str, role: Role, order: Order, summ
                 return
 
 
+async def _listing(client: httpx.AsyncClient, credential: Credential, refresh: bool) -> Listing:
+    cached = None if refresh else _state.listing(credential.uid)
+    if cached:
+        return cached
+    cashier = Cashier(client)
+    await cashier.login(credential.cookie, credential.did)
+    role = await cashier.role(credential.uid)
+    goods = await cashier.goods(role)
+    if not goods:
+        raise RechargeError("该角色当前没有可购买的商品，请使用官方充值中心。")
+    listing = Listing(cashier.token, role, goods, await cashier.limits(role))
+    _state.store(credential.uid, listing)
+    return listing
+
+
 async def _recharge(bot: Bot, ev: Event, credential: Credential) -> None:
     text, channel = payment(ev.text, default_channel())
+    ordering = bool(text) and enabled()
     async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), follow_redirects=False) as client:
-        cashier = Cashier(client)
-        await cashier.login(credential.cookie, credential.did)
-        role = await cashier.role(credential.uid)
-        fresh = await cashier.goods(role)
-        if not fresh:
-            raise RechargeError("该角色当前没有可购买的商品，请使用官方充值中心。")
+        listing = await _listing(client, credential, ordering)
+        role = listing.role.model_copy(update={"uid": credential.shown_uid})
         owner = (ev.bot_id, ev.user_id)
         if not text:
-            image = await render_catalogue(role, fresh)
-            _state.remember(owner, credential.uid, fresh)
+            image = listing.images.get(role.uid) or await render_catalogue(role, listing.goods)
+            listing.images[role.uid] = image
+            _state.remember(owner, credential.uid, listing.goods)
             await bot.send(image)
             return
-        displayed = _state.displayed(owner, credential.uid, fresh)
-        cart = validate_cart(parse_cart(text, displayed), fresh, await cashier.limits(role))
+        displayed = _state.displayed(owner, credential.uid, listing.goods)
+        cart = validate_cart(parse_cart(text, displayed), listing.goods, listing.limits)
         order = None
-        if enabled():
+        if ordering:
             _state.reserve_order(credential.uid, cooldown())
-            order = await cashier.create_order(role, cart, channel)
+            order = await Cashier(client, listing.token).create_order(listing.role, cart, channel)
     image = await render_order(role, cart, channel, order)
     if order is None:
         await bot.send(image)
@@ -97,7 +113,7 @@ async def _recharge(bot: Bot, ev: Event, credential: Credential) -> None:
     summary = f"{role.name} · UID {role.uid}\n{items}\n合计 ¥{cart_total(cart):.2f}"
     await bot.send(f"{summary}（{'微信' if channel == '23' else '支付宝'}）\n{OFFICIAL_ADVICE}")
     await bot.send(image)
-    task = asyncio.create_task(_watch(bot, ev, cashier.token, role, order, summary))
+    task = asyncio.create_task(_watch(bot, ev, listing.token, listing.role, order, summary))
     _watchers.add(task)
     task.add_done_callback(_watchers.discard)
 
