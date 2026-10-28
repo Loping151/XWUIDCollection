@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="{{ font_css_url }}">
+<style>
+{% include "common.css" %}
+.container { width: {{ columns * 94 + 72 }}px; }
+.group { margin-top: 18px; }
+.group-title { display: flex; align-items: baseline; gap: 10px; margin: 0 4px 12px; font-size: 20px; }
+.group-title span { font-size: 15px; color: #a88a72; }
+.group-title::before { content: ''; align-self: center; width: 10px; height: 10px; border-radius: 50%; background: #9cc77a; }
+.group-title.uncommon::before { background: #7f9fe0; }
+.group-title.rare::before { background: #c78ae0; }
+.group-title.epic::before { background: #f09460; }
+.grid { display: grid; grid-template-columns: repeat({{ columns }}, 94px); row-gap: 10px; }
+.cell { position: relative; width: 94px; text-align: center; }
+.tile {
+  position: relative;
+  width: 86px; height: 76px;
+  margin: 0 auto;
+  background: url({{ ui.tile_common }}) center / 100% 100% no-repeat;
+  -webkit-mask: url({{ ui.tile_mask }}) center / 100% 100% no-repeat;
+  overflow: hidden;
+}
+.tile.uncommon { background-image: url({{ ui.tile_uncommon }}); }
+.tile.rare { background-image: url({{ ui.tile_rare }}); }
+.tile.epic { background-image: url({{ ui.tile_epic }}); }
+.tile img { position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; transform: translate(-50%, -46%); }
+.cell.missing .tile { filter: grayscale(1) brightness(1.12); opacity: 0.38; }
+.cell.missing .name { color: #c9b7a4; }
+.qty {
+  position: absolute;
+  right: 4px; top: 56px;
+  min-width: 24px;
+  padding: 1px 5px;
+  border-radius: 10px 0;
+  background: #fdf9ed;
+  color: #8e7b6a;
+  font-size: 13px;
+  line-height: 18px;
+}
+.cell .name, .cell .tail {
+  padding: 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cell .name { margin-top: 4px; font-size: 13px; line-height: 17px; }
+.cell .tail { height: 15px; font-size: 11px; line-height: 15px; color: #a88a72; }
+.cell.missing .tail { color: #d6c7b6; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="content">
+    <header>
+      <img class="logo" src="{{ ui.logo }}">
+      <div class="player">
+        <div>
+          <div class="name">{{ nickname }}</div>
+          <div class="sub">{% if uid %}UID {{ uid }} · {% endif %}已收集 <b>{{ collected }}/{{ total }}</b></div>
+        </div>
+        <img class="avatar" src="{{ avatar }}">
+      </div>
+    </header>
+
+    <div class="progress">
+      {% for p in progress %}
+      <div>
+        <div class="row"><span>{{ p.label }}</span><span>{{ p.owned }}/{{ p.total }}</span></div>
+        <div class="bar"><i style="width: {{ (p.owned * 100 / p.total) | round(1) }}%"></i></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="heading"><h2>{{ title }}</h2></div>
+
+    {% for g in groups %}
+    <section class="group">
+      <div class="group-title {{ g.rarity }}">{{ g.label }}<span>{{ g.owned }}/{{ g.total }}</span></div>
+      <div class="grid">
+        {% for c in g.cards %}
+        <div class="cell{% if not c.count %} missing{% endif %}">
+          <div class="tile {{ c.rarity }}"><img src="{{ c.image }}"></div>
+          {% if c.count > 1 %}<span class="qty">{{ c.count }}</span>{% endif %}
+          <div class="name">{{ c.head }}</div>
+          <div class="tail">{{ c.tail }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+
+    {% if footer %}<img class="footer" src="{{ footer }}">{% endif %}
+  </div>
+</div>
+</body>
+</html>

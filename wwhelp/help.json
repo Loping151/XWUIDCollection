@@ -1,0 +1,60 @@
+{
+  "小功能": {
+    "desc": "鸣潮小合集",
+    "data": [
+      {
+        "name": "高考",
+        "desc": "鸣潮成绩单，需已上传总排行",
+        "eg": "高考",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "宾果",
+        "desc": "6×6 角色宾果图",
+        "eg": "宾果",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "充值",
+        "desc": "充值商品列表，后跟编号生成订单",
+        "eg": "充值1+2",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  },
+  "Tappo": {
+    "desc": "鸣潮桌宠开箱收集",
+    "data": [
+      {
+        "name": "开箱",
+        "desc": "开一次十连，后跟数字开多次十连",
+        "eg": "tp2",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "图鉴",
+        "desc": "可按类型、稀有度、系列、角色筛选",
+        "eg": "tp图鉴长离",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "合成",
+        "desc": "重复收集物一键合成",
+        "eg": "tp合成",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="{{ font_css_url }}">
+<style>
+{% include "common.css" %}
+.container { width: 900px; }
+.grid {
+  display: grid;
+  justify-content: center;
+  gap: 26px 18px;
+  padding-top: 6px;
+}
+.batch + .batch { margin-top: 30px; }
+.batch-label { display: flex; align-items: center; gap: 12px; margin: 0 4px 14px; font-size: 18px; color: #b07a58; }
+.batch-label::after { content: ''; flex: 1; height: 2px; background: #f1dcc0; }
+.card { position: relative; text-align: center; }
+.chest { position: relative; width: 148px; height: 148px; }
+.chest > * { position: absolute; }
+.rays { left: -24%; top: -24%; width: 148%; height: 148%; opacity: 0.9; }
+.frame { inset: 0; width: 100%; height: 100%; }
+.prize {
+  inset: 0;
+  -webkit-mask: url({{ ui.frame_mask }}) center / 100% 100% no-repeat;
+  overflow: hidden;
+}
+.prize img { position: absolute; left: 6%; top: 5%; width: 88%; height: 88%; object-fit: contain; }
+.stars { left: -8%; top: -10%; width: 116%; }
+.ribbons { left: -6%; top: 2%; width: 112%; }
+.new {
+  left: -6px; top: -6px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: #c88865;
+  color: #fff3dd;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(142, 94, 67, 0.3);
+}
+.card .name {
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card .label { margin-top: 2px; font-size: 13px; color: #a88a72; }
+.label.uncommon { color: #6f8fd0; }
+.label.rare { color: #b46fd0; }
+.label.epic { color: #e5824e; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="content">
+    <header>
+      <img class="logo" src="{{ ui.logo }}">
+      <div class="player">
+        <div>
+          <div class="name">{{ nickname }}</div>
+          <div class="sub">{% if uid %}UID {{ uid }} · {% endif %}今日剩余 <b>{{ left }}/{{ limit }}</b>{% if pity %} · 史诗保底 <b>{{ pity }}</b>{% endif %}</div>
+        </div>
+        <img class="avatar" src="{{ avatar }}">
+      </div>
+    </header>
+
+    <div class="heading"><h2>{{ title }}</h2></div>
+    {% if note %}<div class="note">{{ note }}</div>{% endif %}
+
+    {% for s in sections %}
+    <div class="batch">
+    {% if s.label %}<div class="batch-label">{{ s.label }}</div>{% endif %}
+    <div class="grid" style="grid-template-columns: repeat({{ [s.cards | length, 5] | min }}, 148px)">
+      {% for c in s.cards %}
+      <div class="card">
+        <div class="chest">
+          {% if c.rarity in ('rare', 'epic') %}<img class="rays" src="{{ ui['rays_' ~ c.rarity] }}">{% endif %}
+          <img class="frame" src="{{ ui['frame_' ~ c.rarity] }}">
+          <div class="prize"><img src="{{ c.image }}"></div>
+          <img class="stars" src="{{ ui['stars_' ~ c.rarity] }}">
+          {% if c.rarity != 'common' %}<img class="ribbons" src="{{ ui['ribbons_' ~ c.rarity] }}">{% endif %}
+          {% if c.fresh %}<span class="new">NEW</span>{% endif %}
+        </div>
+        <div class="name">{{ c.name }}</div>
+        <div class="label {{ c.rarity }}">{{ c.label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    </div>
+    {% endfor %}
+
+    <div class="progress">
+      {% for p in progress %}
+      <div>
+        <div class="row"><span>{{ p.label }}</span><span>{{ p.owned }}/{{ p.total }}</span></div>
+        <div class="bar"><i style="width: {{ (p.owned * 100 / p.total) | round(1) }}%"></i></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if footer %}<img class="footer" src="{{ footer }}">{% endif %}
+  </div>
+</div>
+</body>
+</html>
