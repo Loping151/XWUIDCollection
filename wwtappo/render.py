@@ -50,7 +50,7 @@ def _progress(box: Box) -> list[dict[str, object]]:
 
 async def _render(ev: Event, template: str, context: dict[str, object]) -> bytes | None:
     from plugins.XutheringWavesUID.XutheringWavesUID.utils.image import pil_to_b64, get_event_avatar
-    from plugins.XutheringWavesUID.XutheringWavesUID.utils.render_utils import render_html, get_footer_b64
+    from plugins.XutheringWavesUID.XutheringWavesUID.utils.render_utils import render_html
 
     avatar = await get_event_avatar(ev, is_valid_at_param=False)
     context.update(
@@ -58,7 +58,6 @@ async def _render(ev: Event, template: str, context: dict[str, object]) -> bytes
         avatar=pil_to_b64(avatar, quality=80),
         font=_uri(ASSETS / "font" / "tappo.woff2"),
         ui={path.stem: _uri(path) for path in sorted((ASSETS / "ui").iterdir())},
-        footer=get_footer_b64(footer_type="black") or "",
     )
     return await render_html(_ENV, template, context)
 

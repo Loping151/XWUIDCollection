@@ -18,7 +18,7 @@ body { margin: 0; background: #fef3e0; }
   -webkit-mask-image: linear-gradient(200deg, #000 15%, transparent 70%);
   pointer-events: none;
 }
-.content { position: relative; padding: 28px 36px 18px; }
+.content { position: relative; padding: 28px 36px 32px; }
 
 header { display: flex; align-items: center; justify-content: space-between; }
 .logo { width: 196px; display: block; filter: drop-shadow(0 2px 0 rgba(222, 150, 80, 0.45)); }
@@ -66,4 +66,3 @@ header { display: flex; align-items: center; justify-content: space-between; }
 }
 .note { margin: -8px 0 16px; text-align: center; font-size: 15px; color: #a88a72; }
 
-.footer { display: block; width: 100%; margin-top: 18px; }
