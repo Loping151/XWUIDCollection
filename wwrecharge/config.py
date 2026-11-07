@@ -9,7 +9,7 @@ CONFIG_PATH = get_res_path("XWUIDCollection") / "recharge.json"
 CONFIG_DEFAULT: dict[str, GSC] = {
     "RechargeEnable": GsBoolConfig(
         "允许下单（开启后自行负责）",
-        "关闭时仅展示商品与订单预览，不创建订单、不显示支付二维码。开启后会向官方创建订单并发送支付二维码，涉及真实支付，开启后自行负责",
+        "关闭时除主人与超级用户外仅展示商品与订单预览，不创建订单、不显示支付二维码。开启后会向官方创建订单并发送支付二维码，涉及真实支付，开启后自行负责",
         False,
     ),
     "RechargeCooldown": GsIntConfig(

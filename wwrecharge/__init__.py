@@ -88,7 +88,7 @@ async def _listing(client: httpx.AsyncClient, credential: Credential, refresh: b
 
 async def _recharge(bot: Bot, ev: Event, credential: Credential) -> None:
     text, channel = payment(ev.text, default_channel())
-    ordering = bool(text) and enabled()
+    ordering = bool(text) and (ev.user_pm <= 1 or enabled())
     async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), follow_redirects=False) as client:
         listing = await _listing(client, credential, ordering)
         role = listing.role.model_copy(update={"uid": credential.shown_uid})
