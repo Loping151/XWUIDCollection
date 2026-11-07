@@ -8,7 +8,7 @@ from .models import Goods, Limits, CartItem, PayChannel, RechargeError, cart_tot
 _NUM = r"[0-9零〇一二两兩三四五六七八九十]+"
 _DIGITS = {c: i for i, c in enumerate("零一二三四五六七八九")}
 _DIGITS.update({"〇": 0, "两": 2, "兩": 2})
-_TARGET = re.compile(rf"(\d+(?:\.\d+)?|{_NUM})\s*([wW万])?\s*(月相)?")
+_TARGET = re.compile(rf"(\d+(?:\.\d+)?|{_NUM})\s*([wW万])?\s*(元|块)?")
 _ORDER_CAP = Decimal("50000")
 
 
@@ -91,28 +91,26 @@ def _known(n: int, goods: tuple[Goods, ...]) -> bool:
     return 1 <= n <= len(goods) or any(g.amount == n or g.price == n for g in goods)
 
 
-def moon_target(text: str, goods: tuple[Goods, ...]) -> int | None:
+def _decimal(value: str) -> Decimal:
+    return Decimal(value) if "." in value else Decimal(number(value))
+
+
+def money_target(text: str, goods: tuple[Goods, ...]) -> Decimal | None:
     match = _TARGET.fullmatch(unicodedata.normalize("NFKC", text).strip())
     if not match:
         return None
-    value, wan, moon = match.groups()
-    plain = not wan and not moon
-    if "." in value:
-        if plain:
-            return None
-        amount = Decimal(value)
-    else:
-        n = number(value)
-        if plain and (n < 1 or _known(n, goods)):
-            return None
-        amount = Decimal(n)
-    target = int(amount * (10000 if wan else 1))
-    if target < 1:
-        raise RechargeError("月相数量必须大于 0。")
+    value, wan, yuan = match.groups()
+    if not wan and not yuan and ("." in value or number(value) < 1 or _known(number(value), goods)):
+        return None
+    if not wan and yuan and any(g.price == _decimal(value) for g in goods):
+        return None
+    target = _decimal(value) * (10000 if wan else 1)
+    if target <= 0:
+        raise RechargeError("金额必须大于 0。")
     return target
 
 
-def moon_cart(target: int, goods: tuple[Goods, ...], limits: Limits) -> tuple[CartItem, ...]:
+def moon_cart(target: Decimal, goods: tuple[Goods, ...], limits: Limits) -> tuple[CartItem, ...]:
     packs: list[tuple[Goods, int]] = []
     for g in goods:
         if g.amount <= 0 or not g.name.endswith("月相") or g.status != 1:
@@ -123,22 +121,24 @@ def moon_cart(target: int, goods: tuple[Goods, ...], limits: Limits) -> tuple[Ca
             packs.append((g, min(caps)))
     if not packs:
         raise RechargeError("当前没有可购买的月相商品。")
-    unit = math.gcd(*(g.amount for g, _ in packs))
+    cents = [int(g.price * 100) for g, _ in packs]
+    goal = int(target * 100)
+    unit = math.gcd(*cents)
     reach = min(
-        sum(g.amount * cap for g, cap in packs),
-        target + max(g.amount for g, _ in packs),
-        int(_ORDER_CAP / min(g.price / g.amount for g, _ in packs)),
+        sum(c * cap for c, (_, cap) in zip(cents, packs)),
+        goal + max(cents),
+        int(_ORDER_CAP * 100),
     )
     ceiling = reach // unit
     best = [0] + [limits.total + 1] * ceiling
     layers: list[tuple[int, int, int, bytearray]] = []
-    for index, (g, cap) in enumerate(packs):
+    for index, (c, (_, cap)) in enumerate(zip(cents, packs)):
         chunk = 1
         while cap > 0:
             take = min(chunk, cap)
             cap -= take
             chunk *= 2
-            span = g.amount // unit * take
+            span = c // unit * take
             if span > ceiling:
                 break
             used = bytearray(ceiling + 1)
@@ -150,7 +150,9 @@ def moon_cart(target: int, goods: tuple[Goods, ...], limits: Limits) -> tuple[Ca
     reachable = [s for s in range(1, ceiling + 1) if best[s] <= limits.total]
     if not reachable:
         raise RechargeError("当前没有可购买的月相商品。")
-    s = min(reachable, key=lambda s: (abs(s * unit - target), best[s], s))
+    if goal > reachable[-1] * unit:
+        raise RechargeError(f"单笔订单最多 {Decimal(reachable[-1] * unit) / 100} 元，请分次充值。")
+    s = min(reachable, key=lambda s: (abs(s * unit - goal), best[s], s))
     counts = [0] * len(packs)
     for index, take, span, used in reversed(layers):
         if used[s]:
@@ -160,7 +162,7 @@ def moon_cart(target: int, goods: tuple[Goods, ...], limits: Limits) -> tuple[Ca
 
 
 def build_cart(text: str, goods: tuple[Goods, ...], limits: Limits) -> tuple[CartItem, ...]:
-    target = moon_target(text, goods)
+    target = money_target(text, goods)
     return parse_cart(text, goods) if target is None else moon_cart(target, goods, limits)
 
 
