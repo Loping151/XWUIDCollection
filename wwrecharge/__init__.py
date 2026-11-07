@@ -14,7 +14,7 @@ from .api import Cashier
 from .state import Listing, RechargeState
 from .config import enabled, cooldown, default_channel
 from .models import OFFICIAL_ADVICE, Role, Order, RechargeError, cart_total
-from .parser import payment, parse_cart, validate_cart
+from .parser import payment, build_cart, validate_cart
 from .render import render_order, render_catalogue
 
 sv_recharge = SV("充值", priority=5)
@@ -100,7 +100,7 @@ async def _recharge(bot: Bot, ev: Event, credential: Credential) -> None:
             await bot.send(image)
             return
         displayed = _state.displayed(owner, credential.uid, listing.goods)
-        cart = validate_cart(parse_cart(text, displayed), listing.goods, listing.limits)
+        cart = validate_cart(build_cart(text, displayed, listing.limits), listing.goods, listing.limits)
         order = None
         if ordering:
             _state.reserve_order(credential.uid, cooldown())
@@ -118,7 +118,7 @@ async def _recharge(bot: Bot, ev: Event, credential: Credential) -> None:
     task.add_done_callback(_watchers.discard)
 
 
-@sv_recharge.on_command(("充值", "充钱", "储值", "重置"), block=True)
+@sv_recharge.on_command(("充值", "充钱", "储值", "重置", "氪金", "课金"), block=True)
 async def cmd_ww_recharge(bot: Bot, ev: Event) -> None:
     try:
         credential = await _credential(ev)
